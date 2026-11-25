@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "alarm": { "default": "mdi:shield-check", "state": { "on": "mdi:shield-alert" } },
+      "activity": { "default": "mdi:motion-sensor-off", "state": { "on": "mdi:motion-sensor" } },
+      "recording": { "default": "mdi:record-rec" },
+      "push_connection": { "default": "mdi:lan-connect" }
+    },
+    "sensor": {
+      "last_event": { "default": "mdi:robot-outline" },
+      "last_event_time": { "default": "mdi:clock-alert-outline" },
+      "events_today": { "default": "mdi:calendar-today" },
+      "alarms_today": { "default": "mdi:alarm-light-outline" },
+      "storage_used": { "default": "mdi:harddisk" },
+      "ai_status": { "default": "mdi:brain" },
+      "pcloud_uploads": { "default": "mdi:cloud-upload" }
+    },
+    "switch": {
+      "detection": { "default": "mdi:eye", "state": { "off": "mdi:eye-off" } }
+    }
+  },
+  "services": {
+    "trigger": { "service": "mdi:alarm-light" }
+  }
+}

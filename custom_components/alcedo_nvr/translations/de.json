@@ -1,0 +1,82 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Alcedo NVR verbinden",
+        "description": "Normalerweise wird die Alcedo-NVR-App automatisch gefunden. Für die manuelle Einrichtung in der Web-Oberfläche der App → „Verbindung für die Integration“ Host und API-Key kopieren.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "API-Key"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Alcedo NVR gefunden",
+        "description": "Die Alcedo-NVR-App läuft. Mit Home Assistant verbinden?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Keine Verbindung zur Alcedo-NVR-App.",
+      "invalid_auth": "Der API-Key wurde abgelehnt."
+    },
+    "abort": {
+      "already_configured": "Alcedo NVR ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Übergabe an pCloud Sync",
+        "description": "Abgeschlossene Ereignisse (Clip und Snapshot) können automatisch mit der Integration [pCloud Sync]({pcloud_url}) hochgeladen werden. pCloud Sync installiert: {pcloud_status}",
+        "data": {
+          "pcloud_mode": "Nach pCloud hochladen",
+          "pcloud_subfolder": "pCloud-Unterordner",
+          "pcloud_snapshot": "Snapshot ebenfalls hochladen"
+        },
+        "data_description": {
+          "pcloud_subfolder": "Unterhalb des pCloud-Sync-Zielordners; pro Kamera wird ein Ordner angelegt.",
+          "pcloud_mode": "Bestätigt = nur Alarme, die die lokale KI bestätigt hat (bzw. alle Kamera-Alarme, wenn die KI aus ist)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "pcloud_mode": {
+      "options": {
+        "off": "Aus",
+        "confirmed": "Nur bestätigte Alarme",
+        "all": "Alle Ereignisse"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" },
+      "activity": { "name": "Aktivität" },
+      "recording": { "name": "Aufnahme" },
+      "push_connection": { "name": "Push-Verbindung" }
+    },
+    "sensor": {
+      "last_event": { "name": "Letztes Ereignis" },
+      "last_event_time": { "name": "Zeit letztes Ereignis" },
+      "events_today": { "name": "Ereignisse heute" },
+      "alarms_today": { "name": "Alarme heute" },
+      "storage_used": { "name": "Speicher belegt" },
+      "ai_status": { "name": "KI-Status" },
+      "pcloud_uploads": { "name": "pCloud-Uploads" }
+    },
+    "switch": {
+      "detection": { "name": "Erkennung" }
+    }
+  },
+  "services": {
+    "trigger": {
+      "name": "Alarm auslösen",
+      "description": "Startet (oder verlängert) ein Ereignis auf Alcedo-Kameras, z. B. durch einen Ring-Bewegungs- oder Klingelsensor. Kameras mit Aufnahme „on_demand“ beginnen jetzt aufzunehmen.",
+      "fields": {
+        "entity_id": { "name": "Kameras", "description": "Kamera-Entitäten von Alcedo NVR." },
+        "label": { "name": "Bezeichnung", "description": "Grund, z. B. motion, person oder doorbell." }
+      }
+    }
+  }
+}

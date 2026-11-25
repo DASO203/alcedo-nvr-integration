@@ -1,0 +1,21 @@
+trigger:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: alcedo_nvr
+          domain: camera
+          multiple: true
+    label:
+      default: motion
+      example: person
+      selector:
+        select:
+          custom_value: true
+          options:
+            - motion
+            - person
+            - vehicle
+            - animal
+            - doorbell

@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check version matches tag
+        run: |
+          version=$(jq -r .version custom_components/alcedo_nvr/manifest.json)
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "manifest version $version does not match tag $tag"; exit 1
+          fi
+      - name: Build zip
+        run: |
+          cd custom_components/alcedo_nvr
+          zip -r ../../alcedo_nvr.zip . -x "__pycache__/*"
+      - name: Upload asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" alcedo_nvr.zip --clobber
