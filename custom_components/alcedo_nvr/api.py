@@ -37,6 +37,8 @@ class AlcedoClient:
             ) as resp:
                 if resp.status == 401:
                     raise AlcedoAuthError("API key rejected")
+                if resp.status in (400, 409):
+                    raise AlcedoError((await resp.text())[:300] or f"HTTP {resp.status}")
                 resp.raise_for_status()
                 if resp.content_type == "application/json":
                     return await resp.json()
@@ -52,6 +54,17 @@ class AlcedoClient:
         if camera:
             params["camera"] = camera
         return await self._request("GET", "/events", params=params)
+
+    async def cameras(self) -> list[dict[str, Any]]:
+        """All cameras of the app (without credentials)."""
+        return await self._request("GET", "/cameras")
+
+    async def add_cameras(self, cameras: list[dict[str, Any]]) -> dict[str, Any]:
+        """Add cameras taken over from Home Assistant (the app restarts its cameras)."""
+        return await self._request("POST", "/cameras", json={"cameras": cameras})
+
+    async def remove_camera(self, camera: str) -> dict[str, Any]:
+        return await self._request("DELETE", f"/cameras/{camera}")
 
     async def camera_snapshot(self, camera: str) -> bytes:
         return await self._request("GET", f"/cameras/{camera}/snapshot.jpg")

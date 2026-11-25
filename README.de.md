@@ -16,6 +16,8 @@
 
 ## Funktionen
 
+**Kameras übernehmen statt neu eintragen:** Kameras, die Home Assistant schon kennt (Reolink-Integration, Generische Kamera/RTSP, ring-mqtt …), werden beim Einrichten angeboten und später automatisch als *Entdeckt* gemeldet.
+
 | Pro Kamera | |
 |---|---|
 | `camera.<kamera>` | Livebild (direkt von der Kamera) und Snapshot |
@@ -33,6 +35,7 @@ Dazu kommen:
 - **Aktion `alcedo_nvr.trigger`:** Ein beliebiger Sensor (z. B. Ring-Bewegung oder -Klingel) löst ein Ereignis aus. Kameras mit Aufnahme `on_demand` beginnen dann aufzunehmen.
 - **pCloud:** Abgeschlossene Ereignisse werden über [pCloud Sync](https://github.com/DASO203/pcloud-sync-unofficial) automatisch hochgeladen.
 - **Dashboard-Karte `custom:alcedo-timeline-card`:** Zeitstrahl aller Kameras (24 h / 3 T / 7 T), Klick zum Abspielen, **Zeitraffer** aller Alarme
+- **pCloud-Archiv:** Alarme, die lokal schon gelöscht sind, bleiben im Zeitstrahl sichtbar (☁) und werden aus pCloud abgespielt (ab pCloud Sync 0.2.0).
 - **Aktion `alcedo_nvr.create_timelapse`:** Zeitraffer erstellen und den Dateipfad zurückgeben, z. B. für pCloud Sync
 
 ## Installation
@@ -41,6 +44,26 @@ Dazu kommen:
 2. Diese Integration installieren: Button oben, oder **Einstellungen → Marketplace → Aus Link hinzufügen** → `DASO203/alcedo-nvr-integration`
 3. Home Assistant meldet **„Neues Gerät gefunden: Alcedo NVR“** → **Hinzufügen**
    (Manuell: *Integration hinzufügen → Alcedo NVR*, dann Host und API-Key aus der Alcedo-Oberfläche → „Verbindung für die Integration“ eintragen)
+4. **Vorhandene Kameras übernehmen:** Der Assistent listet alle Kameras, die Home Assistant schon kennt. Haken setzen, fertig. Zugangsdaten musst du nicht erneut eingeben.
+5. **pCloud** (nur wenn pCloud Sync installiert ist): auswählen, was hochgeladen wird.
+
+## Kameras aus Home Assistant übernehmen
+
+| Quelle in Home Assistant | Was Alcedo übernimmt |
+|---|---|
+| Reolink-Integration | Host, Zugangsdaten, Kanal und exakter Stream-Pfad. Alcedo nutzt dann die KI der Kamera (Person/Fahrzeug/Tier). |
+| Generische Kamera, ONVIF, andere Kameras mit RTSP-Stream | die Stream-Adresse. INSTAR (`/11`) und Reolink-Pfade werden erkannt, der Substream dient der Bewegungserkennung. |
+| ring-mqtt | *Stream Source* des Info-Sensors. Ring wird nur bei Bedarf aufgenommen. |
+
+**Später hinzugekommene Kameras** meldet Home Assistant unter **Einstellungen → Geräte & Dienste → Entdeckt** („Neue Kamera: Einfahrt“). **Hinzufügen** → Aufnahme und Erkennung wählen (*Automatisch* passt fast immer) → fertig. Mit **Ignorieren** wird die Kamera nie wieder angeboten.
+
+Unter **Alcedo NVR → Konfigurieren** findest du:
+- *Kameras aus Home Assistant übernehmen* (auch ignorierte)
+- *Übernommene Kameras entfernen*
+- *pCloud-Upload & Archiv*
+- *Automatische Kamerasuche* an/aus
+
+Zugangsdaten gehen nur an die Alcedo-App in deinem lokalen Netz und erscheinen nie in Dialogen oder Logs. Kameras ohne RTSP-Stream (z. B. die Ring-Integration von Home Assistant, die nur WebRTC kann) können nicht übernommen werden. Für Ring brauchst du ring-mqtt.
 
 ## Dashboard-Karte
 
@@ -70,6 +93,8 @@ Der Zeitraffer wird in der App mit niedriger Priorität erstellt. Bereits berech
 3. Ergebnis: `/HomeAssistant/Sync/alcedo/<kamera>/JJJJ/MM/TT/<ereignis>.mp4` (+ `.jpg`)
 
 Die Dateien bleiben lokal erhalten. Alcedo löscht sie selbst nach der eingestellten Aufbewahrungszeit.
+
+**pCloud-Archiv im Zeitstrahl** (Option *pCloud-Archiv im Zeitstrahl anzeigen*, Standard an, ab pCloud Sync 0.2.0): Ist ein Alarm lokal schon gelöscht, aber in pCloud vorhanden, zeigt die Zeitstrahl-Karte ihn weiter an (Markierung ☁). Beim Klick wird der Clip über Home Assistant direkt aus pCloud abgespielt, der pCloud-Link selbst gelangt nie in den Browser. Alcedo merkt sich jeden Upload und gleicht höchstens alle 15 Minuten mit dem pCloud-Ordner ab. So erscheinen auch ältere Uploads, und in pCloud gelöschte Dateien verschwinden aus dem Zeitstrahl. Den Zeitraffer erstellt die App weiterhin nur aus lokal vorhandenen Clips.
 
 ## Beispiele
 

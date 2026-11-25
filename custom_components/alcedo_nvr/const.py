@@ -19,6 +19,15 @@ DEFAULT_PCLOUD_SUBFOLDER: Final = "alcedo"
 
 PCLOUD_DOMAIN: Final = "pcloud_sync"
 PCLOUD_SERVICE: Final = "upload_file"
+PCLOUD_LIST: Final = "list_folder"
+PCLOUD_LINK: Final = "get_file_link"
+CONF_PCLOUD_ARCHIVE: Final = "pcloud_archive"
+
+CONF_DISCOVER_CAMERAS: Final = "discover_cameras"
+AUTO: Final = "auto"
+RECORD_MODES: Final = ("auto", "events", "continuous", "on_demand", "off")
+DETECT_MODES: Final = ("auto", "camera", "motion", "both", "off")
+OBJECTS: Final = ("person", "vehicle", "animal", "motion")
 
 EVENT_ALCEDO: Final = f"{DOMAIN}_event"
 POLL_MINUTES: Final = 5

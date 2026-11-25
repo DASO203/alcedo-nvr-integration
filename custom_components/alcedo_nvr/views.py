@@ -11,17 +11,20 @@ import re
 import time
 from typing import Any
 
+import aiohttp
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AlcedoError
+from .archive import merge_timeline
 from .const import DOMAIN
 
 CARD_URL = "/alcedo_nvr_static/alcedo-timeline-card.js"
-CARD_VERSION = "0.2.0"  # bump to bust browser caches
+CARD_VERSION = "0.3.0"  # bump to bust browser caches
 _ID = r"[A-Za-z0-9_.-]{1,128}"
 _FILE_PATHS = (
     (re.compile(rf"^events/({_ID})/(clip\.mp4|snapshot\.jpg)$"), "video"),
@@ -55,6 +58,29 @@ async def _proxy(request: web.Request, upstream: Any, content_type: str) -> web.
         upstream.release()
 
 
+async def _from_pcloud(
+    hass: HomeAssistant, request: web.Request, entry: ConfigEntry, event_id: str, kind: str
+) -> web.StreamResponse:
+    """Stream an archived clip / snapshot back from pCloud (local copy already deleted).
+
+    The pCloud link is fetched server side and never shown to the browser.
+    """
+    archive = entry.runtime_data.coordinator.archive
+    url = await archive.async_link(event_id, kind)
+    if url is None:
+        return web.Response(status=HTTPStatus.NOT_FOUND)
+    try:
+        upstream = await async_get_clientsession(hass).get(
+            url, timeout=aiohttp.ClientTimeout(total=None, sock_connect=15, sock_read=120)
+        )
+    except (TimeoutError, aiohttp.ClientError):
+        return web.Response(status=HTTPStatus.BAD_GATEWAY)
+    if upstream.status != 200:
+        upstream.release()
+        return web.Response(status=HTTPStatus.NOT_FOUND)
+    return await _proxy(request, upstream, "video/mp4" if kind == "clip" else "image/jpeg")
+
+
 class AlcedoEventMediaView(HomeAssistantView):
     """/api/alcedo_nvr/<entry>/<event_id>/<clip|snapshot> (media browser, notifications)."""
 
@@ -74,7 +100,7 @@ class AlcedoEventMediaView(HomeAssistantView):
         try:
             upstream = await entry.runtime_data.client.open_file(event_id, kind)
         except AlcedoError:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
+            return await _from_pcloud(self.hass, request, entry, event_id, kind)
         return await _proxy(request, upstream, "video/mp4" if kind == "clip" else "image/jpeg")
 
 
@@ -106,6 +132,9 @@ class AlcedoFileView(HomeAssistantView):
                 else:
                     upstream = await client.open_path(path)
             except AlcedoError:
+                if kind == "video":  # events/<id>/clip.mp4 | snapshot.jpg
+                    media = "clip" if m[2] == "clip.mp4" else "snapshot"
+                    return await _from_pcloud(self.hass, request, entry, m[1], media)
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             ctype = "image/jpeg" if path.endswith(".jpg") else "video/mp4"
             return await _proxy(request, upstream, ctype)
@@ -134,6 +163,10 @@ class AlcedoTimelineView(HomeAssistantView):
                 end = time.time()
                 start = end - max(1.0, min(744.0, float(q.get("hours", 24)))) * 3600
             data = await entry.runtime_data.client.timeline(start, end)
+            archive = entry.runtime_data.coordinator.archive
+            if archive.enabled:
+                await archive.async_refresh()
+                merge_timeline(data, archive.between(start, end))
         except ValueError:
             return self.json_message("invalid range", HTTPStatus.BAD_REQUEST)
         except AlcedoError as err:

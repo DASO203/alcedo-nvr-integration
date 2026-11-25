@@ -7,11 +7,12 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AlcedoAuthError, AlcedoClient, AlcedoError
+from .archive import PcloudArchive
 from .const import (
     CONF_PCLOUD_MODE,
     CONF_PCLOUD_SNAPSHOT,
@@ -44,6 +45,7 @@ class AlcedoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.connected = False
         self.pcloud_uploads = 0
         self.pcloud_last_error: str | None = None
+        self.archive = PcloudArchive(hass, entry.entry_id, dict(entry.options))
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
@@ -76,6 +78,11 @@ class AlcedoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def handle_message(self, message: dict[str, Any]) -> None:
         kind = message.get("type")
         if kind == "hello":
+            if self._camera_set_changed(message.get("info") or {}):
+                # cameras were added / removed (e.g. taken over from Home Assistant)
+                _LOGGER.info("Alcedo camera list changed, reloading the integration")
+                self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+                return
             await self.async_request_refresh()
             return
         if self.data is None:
@@ -101,6 +108,12 @@ class AlcedoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         cam[key] = message[key]
         self.async_set_updated_data(data)
 
+    def _camera_set_changed(self, info: dict[str, Any]) -> bool:
+        if not self.data or "cameras" not in info:
+            return False
+        old = {c["id"] for c in self.data["info"].get("cameras", [])}
+        return old != {c["id"] for c in info["cameras"]}
+
     async def _to_pcloud(self, event: dict[str, Any]) -> None:
         """Hand finished events to the pCloud Sync integration (if configured)."""
         options = self.config_entry.options
@@ -111,20 +124,29 @@ class AlcedoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.pcloud_last_error = "pCloud Sync is not installed or not loaded"
             _LOGGER.warning("Event %s: %s", event["id"], self.pcloud_last_error)
             return
-        paths = [event.get("clip_path")]
+        paths = [("clip", event.get("clip_path"))]
         if options.get(CONF_PCLOUD_SNAPSHOT, True) or not event.get("clip_path"):
-            paths.append(event.get("snapshot_path"))
+            paths.append(("snapshot", event.get("snapshot_path")))
         subfolder = (
             f"{options.get(CONF_PCLOUD_SUBFOLDER, DEFAULT_PCLOUD_SUBFOLDER)}/{event['camera']}"
         )
-        for path in filter(None, paths):
+        wants_response = (
+            self.hass.services.supports_response(PCLOUD_DOMAIN, PCLOUD_SERVICE)
+            is not SupportsResponse.NONE
+        )
+        for kind, path in paths:
+            if not path:
+                continue
             try:
-                await self.hass.services.async_call(
+                result = await self.hass.services.async_call(
                     PCLOUD_DOMAIN,
                     PCLOUD_SERVICE,
                     {"path": path, "subfolder": subfolder, "delete_after_upload": False},
                     blocking=True,
+                    return_response=wants_response,
                 )
+                if isinstance(result, dict) and result.get("remote_path"):
+                    self.archive.record(event, kind, result["remote_path"])
                 self.pcloud_uploads += 1
                 self.pcloud_last_error = None
             except Exception as err:

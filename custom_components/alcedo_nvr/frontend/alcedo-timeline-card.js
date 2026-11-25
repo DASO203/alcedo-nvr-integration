@@ -20,14 +20,14 @@ const TEXT = {
     empty: "Keine Ereignisse in diesem Zeitraum.", noRec: "Zu dieser Zeit gibt es keine Aufnahme.",
     rec: "Aufnahme ab", alarm: "Alarm", rejected: "verworfen", pending: "in Prüfung",
     error: "Alcedo NVR nicht erreichbar", noCams: "Keine Kameras.", days: "T", hours: "h",
-    noClip: "Kein Clip – Snapshot:", events: "Ereignisse", alarms: "Alarme",
+    noClip: "Kein Clip – Snapshot:", events: "Ereignisse", alarms: "Alarme", cloud: "aus pCloud",
   },
   en: {
     title: "Alcedo timeline", timelapse: "Timelapse", building: "Building timelapse",
     empty: "No events in this period.", noRec: "No recording at this time.",
     rec: "Recording from", alarm: "alarm", rejected: "rejected", pending: "pending",
     error: "Alcedo NVR not reachable", noCams: "No cameras.", days: "d", hours: "h",
-    noClip: "No clip – snapshot:", events: "events", alarms: "alarms",
+    noClip: "No clip – snapshot:", events: "events", alarms: "alarms", cloud: "from pCloud",
   },
 };
 
@@ -115,6 +115,7 @@ class AlcedoTimelineCard extends HTMLElement {
         .ev.c { background: var(--error-color, #db4437); }
         .ev.r { background: var(--disabled-text-color, #9e9e9e); }
         .ev.p { background: var(--warning-color, #ffa600); }
+        .ev.a { box-shadow: 0 0 0 2px var(--card-background-color, #fff) inset; opacity: .85; }
         .now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--primary-color); }
         .status { color: var(--secondary-text-color); font-size: 13px; margin-top: 8px; min-height: 18px; }
         .status a { color: var(--primary-color); }
@@ -205,8 +206,8 @@ class AlcedoTimelineCard extends HTMLElement {
           ${events.map((e) => {
             const cls = e.confirmed === null ? "p" : e.confirmed ? "c" : "r";
             const state = e.confirmed === null ? this._t("pending") : e.confirmed ? this._t("alarm") : this._t("rejected");
-            const tip = `${when(e.start)} · ${state} · ${(e.description || e.labels.join(", "))}`;
-            return `<div class="ev ${cls}" style="left:${pct(e.start)}" data-ev="${esc(e.id)}" data-clip="${e.has_clip}" title="${esc(tip)}"></div>`;
+            const tip = `${when(e.start)} · ${state} · ${(e.description || (e.labels || []).join(", "))}${e.archived ? ` · ☁ ${this._t("cloud")}` : ""}`;
+            return `<div class="ev ${cls}${e.archived ? " a" : ""}" style="left:${pct(e.start)}" data-ev="${esc(e.id)}" data-clip="${e.has_clip}" title="${esc(tip)}"></div>`;
           }).join("")}
           ${now > d.start && now < d.end ? `<div class="now" style="left:${pct(now)}"></div>` : ""}
         </div></div>`;

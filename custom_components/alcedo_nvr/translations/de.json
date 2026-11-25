@@ -1,51 +1,183 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "Alcedo NVR verbinden",
-        "description": "Normalerweise wird die Alcedo-NVR-App automatisch gefunden. Für die manuelle Einrichtung in der Web-Oberfläche der App → „Verbindung für die Integration“ Host und API-Key kopieren.",
+        "title": "Alcedo-NVR-App verbinden",
+        "description": "Normalerweise brauchst du das nicht: Home Assistant findet die laufende Alcedo-NVR-App von selbst (Einstellungen → Geräte & Dienste → Entdeckt).\n\nFür eine manuelle Verbindung die App öffnen (Einstellungen → Apps → Alcedo NVR → Web-Oberfläche öffnen) und die Werte aus **Verbindung für die Integration** übernehmen.",
         "data": {
           "host": "Host",
           "port": "Port",
           "api_key": "API-Key"
+        },
+        "data_description": {
+          "host": "Hostname der App, z. B. `a0d7b954-alcedo-nvr` (steht in der Web-Oberfläche).",
+          "port": "Standard 8765.",
+          "api_key": "Zufälliger Schlüssel der App. Er wird nur in deinem Netzwerk verwendet."
         }
       },
       "hassio_confirm": {
-        "title": "Alcedo NVR gefunden",
-        "description": "Die Alcedo-NVR-App läuft. Mit Home Assistant verbinden?"
+        "title": "Alcedo-NVR-App gefunden",
+        "description": "Die Alcedo-NVR-App läuft auf diesem Home Assistant.\n\nAls Nächstes wählst du, welche deiner vorhandenen Kameras Alcedo aufnehmen soll und ob Alarme nach pCloud gehen. Alles lässt sich später unter **Konfigurieren** ändern."
+      },
+      "cameras": {
+        "title": "Vorhandene Kameras übernehmen",
+        "description": "Home Assistant kennt bereits **{count}** Kamera(s), die Alcedo noch nicht aufnimmt. Alcedo übernimmt Stream-Adresse und Zugangsdaten, du musst nichts neu eintragen.\n\nWähle die Kameras, die Alcedo aufnehmen soll. Die Einstellungen darunter gelten für alle gewählten Kameras (pro Kamera später in den App-Optionen änderbar).",
+        "data": {
+          "cameras": "Kameras",
+          "record": "Aufnahme",
+          "detect": "Alarmerkennung",
+          "objects": "Alarm bei"
+        },
+        "data_description": {
+          "cameras": "Name · Quelle · Adresse",
+          "record": "Wann Alcedo aufnimmt. „Automatisch“ passt für die meisten Kameras.",
+          "detect": "Wer erkennt, dass etwas passiert. Bei Reolink ist die KI der Kamera am zuverlässigsten und kostet keine Rechenleistung.",
+          "objects": "Nur diese Erkennungen lösen einen Alarm aus (Reolink-Kamera-KI). Die lokale KI prüft jeden Alarm danach noch einmal."
+        }
+      },
+      "pcloud": {
+        "title": "Alarme nach pCloud hochladen",
+        "description": "pCloud Sync ist installiert. Alcedo kann fertige Alarme (Videoclip und Bild) daran übergeben. Sie landen im pCloud-Ordner `{folder}/[kamera]/`. Die lokalen Dateien bleiben erhalten und werden später von Alcedo aufgeräumt.",
+        "data": {
+          "pcloud_mode": "Was hochladen",
+          "pcloud_archive": "pCloud-Archiv im Zeitstrahl anzeigen"
+        },
+        "data_description": {
+          "pcloud_mode": "„Bestätigt“ = die lokale KI hat den Alarm bestätigt (bzw. jeder Kamera-Alarm, wenn die KI aus ist).",
+          "pcloud_archive": "Ältere Alarme, die lokal schon gelöscht sind, bleiben in der Zeitstrahl-Karte sichtbar und werden direkt aus pCloud abgespielt."
+        }
+      },
+      "camera_confirm": {
+        "title": "Neue Kamera: {name}",
+        "description": "**{name}** ({origin}, `{address}`) ist in Home Assistant vorhanden, wird aber noch nicht von Alcedo aufgenommen.\n\nSoll Alcedo sie aufnehmen und ihre Alarme prüfen? Alcedo nutzt den vorhandenen Stream und die Zugangsdaten. Wähle **Ignorieren**, wenn diese Kamera nie wieder angeboten werden soll.",
+        "data": {
+          "record": "Aufnahme",
+          "detect": "Alarmerkennung",
+          "objects": "Alarm bei"
+        },
+        "data_description": {
+          "record": "Wann Alcedo aufnimmt. „Automatisch“ passt für die meisten Kameras.",
+          "detect": "Wer erkennt, dass etwas passiert. Bei Reolink ist die KI der Kamera am zuverlässigsten und kostet keine Rechenleistung.",
+          "objects": "Nur diese Erkennungen lösen einen Alarm aus (Reolink-Kamera-KI). Die lokale KI prüft jeden Alarm danach noch einmal."
+        }
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung zur Alcedo-NVR-App.",
-      "invalid_auth": "Der API-Key wurde abgelehnt."
+      "cannot_connect": "Keine Verbindung zur Alcedo-NVR-App. Ist sie gestartet?",
+      "invalid_auth": "Der API-Key wurde abgelehnt. Bitte erneut aus der Web-Oberfläche der App kopieren.",
+      "add_failed": "Die App hat die Kamera nicht angenommen. Details stehen im Protokoll der App."
     },
     "abort": {
-      "already_configured": "Alcedo NVR ist bereits eingerichtet."
+      "already_configured": "Alcedo NVR ist bereits eingerichtet.",
+      "not_loaded": "Bitte zuerst Alcedo NVR einrichten (die App muss laufen).",
+      "camera_gone": "Diese Kamera gibt es in Home Assistant nicht mehr.",
+      "camera_added": "{name} wurde zu Alcedo hinzugefügt. Die App startet ihre Kameras neu, die neuen Entitäten erscheinen in wenigen Sekunden.",
+      "already_in_progress": "Diese Kamera wird bereits eingerichtet."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Übergabe an pCloud Sync",
-        "description": "Abgeschlossene Ereignisse (Clip und Snapshot) können automatisch mit der Integration [pCloud Sync]({pcloud_url}) hochgeladen werden. pCloud Sync installiert: {pcloud_status}",
+        "title": "Alcedo-NVR-Einstellungen",
+        "description": "Was möchtest du ändern? Aufnahme, KI und Speicher stellst du in der App selbst ein (Einstellungen → Apps → Alcedo NVR → Konfiguration).",
+        "menu_options": {
+          "add_cameras": "Kameras aus Home Assistant übernehmen",
+          "remove_cameras": "Übernommene Kameras entfernen",
+          "pcloud": "pCloud-Upload & Archiv",
+          "discovery": "Automatische Kamerasuche"
+        }
+      },
+      "add_cameras": {
+        "title": "Kameras aus Home Assistant übernehmen",
+        "description": "Diese Kameras sind in Home Assistant vorhanden (z. B. über die Reolink-Integration, Generische Kamera oder ring-mqtt), werden aber noch nicht von Alcedo aufgenommen.",
         "data": {
-          "pcloud_mode": "Nach pCloud hochladen",
-          "pcloud_subfolder": "pCloud-Unterordner",
-          "pcloud_snapshot": "Snapshot ebenfalls hochladen"
+          "cameras": "Kameras",
+          "record": "Aufnahme",
+          "detect": "Alarmerkennung",
+          "objects": "Alarm bei"
         },
         "data_description": {
-          "pcloud_subfolder": "Unterhalb des pCloud-Sync-Zielordners; pro Kamera wird ein Ordner angelegt.",
-          "pcloud_mode": "Bestätigt = nur Alarme, die die lokale KI bestätigt hat (bzw. alle Kamera-Alarme, wenn die KI aus ist)."
+          "cameras": "Name · Quelle · Adresse",
+          "record": "Wann Alcedo aufnimmt. „Automatisch“ passt für die meisten Kameras.",
+          "detect": "Wer erkennt, dass etwas passiert. Bei Reolink ist die KI der Kamera am zuverlässigsten und kostet keine Rechenleistung.",
+          "objects": "Nur diese Erkennungen lösen einen Alarm aus (Reolink-Kamera-KI). Die lokale KI prüft jeden Alarm danach noch einmal."
+        }
+      },
+      "remove_cameras": {
+        "title": "Kameras entfernen",
+        "description": "Alcedo nimmt die gewählten Kameras nicht mehr auf. Vorhandene Aufnahmen bleiben bis zum Ende der Aufbewahrungszeit. Die Kamera bleibt in Home Assistant erhalten. Kameras aus den App-Optionen werden dort entfernt.",
+        "data": {
+          "cameras": "Kameras"
+        }
+      },
+      "pcloud": {
+        "title": "pCloud-Upload & Archiv",
+        "description": "Nutzt die Integration [pCloud Sync]({pcloud_url}). Installiert: {pcloud_status}",
+        "data": {
+          "pcloud_mode": "Was hochladen",
+          "pcloud_archive": "pCloud-Archiv im Zeitstrahl anzeigen",
+          "pcloud_snapshot": "Bild ebenfalls hochladen",
+          "pcloud_subfolder": "pCloud-Ordner"
+        },
+        "data_description": {
+          "pcloud_mode": "„Bestätigt“ = die lokale KI hat den Alarm bestätigt (bzw. jeder Kamera-Alarm, wenn die KI aus ist).",
+          "pcloud_archive": "Alarme, die lokal schon gelöscht sind, bleiben in der Zeitstrahl-Karte sichtbar und werden direkt aus pCloud abgespielt.",
+          "pcloud_snapshot": "Zusätzlich zum Videoclip das Alarmbild hochladen (klein, schnell angesehen).",
+          "pcloud_subfolder": "Unterhalb des pCloud-Sync-Zielordners. Pro Kamera wird automatisch ein Ordner angelegt."
+        }
+      },
+      "discovery": {
+        "title": "Automatische Kamerasuche",
+        "description": "Taucht in Home Assistant eine neue Kamera auf, bietet Alcedo sie unter **Einstellungen → Geräte & Dienste → Entdeckt** an. Du bestätigst jede Kamera einmal.",
+        "data": {
+          "discover_cameras": "Neue Kameras automatisch anbieten"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Keine Verbindung zur Alcedo-NVR-App.",
+      "add_failed": "Die App hat die Kamera nicht angenommen. Details stehen im Protokoll der App."
+    },
+    "abort": {
+      "not_loaded": "Alcedo NVR ist nicht geladen. Läuft die App?",
+      "cannot_connect": "Keine Verbindung zur Alcedo-NVR-App.",
+      "no_new_cameras": "Es gibt keine Kameras in Home Assistant, die Alcedo noch nicht aufnimmt.",
+      "no_managed_cameras": "Es wurden keine Kameras aus Home Assistant übernommen. Kameras aus den App-Optionen entfernst du in der App (Tab Konfiguration)."
     }
   },
   "selector": {
     "pcloud_mode": {
       "options": {
         "off": "Aus",
-        "confirmed": "Nur bestätigte Alarme",
-        "all": "Alle Ereignisse"
+        "confirmed": "Nur bestätigte Alarme (empfohlen)",
+        "all": "Alle Ereignisse (auch von der KI verworfene)"
+      }
+    },
+    "record": {
+      "options": {
+        "auto": "Automatisch (empfohlen): Ereignisse, Ring nur bei Bedarf",
+        "events": "Nur Ereignisse (mit ein paar Sekunden Vorlauf)",
+        "continuous": "Dauerhaft (24/7, braucht viel Speicher)",
+        "on_demand": "Nur wenn Home Assistant auslöst",
+        "off": "Nicht aufnehmen (nur Livebild und Alarme)"
+      }
+    },
+    "detect": {
+      "options": {
+        "auto": "Automatisch (empfohlen): Kamera-KI bei Reolink, sonst eigene Bewegungserkennung",
+        "camera": "Alarme der Kamera selbst (Reolink-KI, INSTAR-Alarmserver)",
+        "motion": "Eigene Bewegungserkennung von Alcedo",
+        "both": "Beides",
+        "off": "Keine (nur Auslösung aus Home Assistant, z. B. Ring)"
+      }
+    },
+    "objects": {
+      "options": {
+        "person": "Personen",
+        "vehicle": "Fahrzeuge",
+        "animal": "Tiere",
+        "motion": "Jede Bewegung"
       }
     }
   },
