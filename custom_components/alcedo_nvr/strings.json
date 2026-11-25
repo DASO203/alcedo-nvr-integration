@@ -51,22 +51,46 @@
   },
   "entity": {
     "binary_sensor": {
-      "alarm": { "name": "Alarm" },
-      "activity": { "name": "Activity" },
-      "recording": { "name": "Recording" },
-      "push_connection": { "name": "Push connection" }
+      "alarm": {
+        "name": "Alarm"
+      },
+      "activity": {
+        "name": "Activity"
+      },
+      "recording": {
+        "name": "Recording"
+      },
+      "push_connection": {
+        "name": "Push connection"
+      }
     },
     "sensor": {
-      "last_event": { "name": "Last event" },
-      "last_event_time": { "name": "Last event time" },
-      "events_today": { "name": "Events today" },
-      "alarms_today": { "name": "Alarms today" },
-      "storage_used": { "name": "Storage used" },
-      "ai_status": { "name": "AI status" },
-      "pcloud_uploads": { "name": "pCloud uploads" }
+      "last_event": {
+        "name": "Last event"
+      },
+      "last_event_time": {
+        "name": "Last event time"
+      },
+      "events_today": {
+        "name": "Events today"
+      },
+      "alarms_today": {
+        "name": "Alarms today"
+      },
+      "storage_used": {
+        "name": "Storage used"
+      },
+      "ai_status": {
+        "name": "AI status"
+      },
+      "pcloud_uploads": {
+        "name": "pCloud uploads"
+      }
     },
     "switch": {
-      "detection": { "name": "Detection" }
+      "detection": {
+        "name": "Detection"
+      }
     }
   },
   "services": {
@@ -74,8 +98,40 @@
       "name": "Trigger alarm",
       "description": "Starts (or extends) an event on Alcedo cameras, e.g. from a Ring motion or doorbell sensor. Cameras with recording 'on_demand' start recording now.",
       "fields": {
-        "entity_id": { "name": "Cameras", "description": "Alcedo NVR camera entities." },
-        "label": { "name": "Label", "description": "Reason, e.g. motion, person or doorbell." }
+        "entity_id": {
+          "name": "Cameras",
+          "description": "Alcedo NVR camera entities."
+        },
+        "label": {
+          "name": "Label",
+          "description": "Reason, e.g. motion, person or doorbell."
+        }
+      }
+    },
+    "create_timelapse": {
+      "name": "Create timelapse",
+      "description": "Builds a timelapse video of all events in the period (clips sped up, captions with camera, time and AI description). Returns the file path, e.g. to upload it with pCloud Sync.",
+      "fields": {
+        "hours": {
+          "name": "Period (hours)",
+          "description": "24 = last day, 168 = last week"
+        },
+        "mode": {
+          "name": "Source",
+          "description": "clips (videos) or snapshots (stills, faster)"
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed-up factor of the clips"
+        },
+        "only_confirmed": {
+          "name": "Only confirmed alarms",
+          "description": "Skip events the AI rejected"
+        },
+        "entity_id": {
+          "name": "Cameras",
+          "description": "Optional, default: all"
+        }
       }
     }
   }

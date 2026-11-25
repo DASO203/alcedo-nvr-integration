@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2026-11-25
+
+### Added
+- Dashboard card `custom:alcedo-timeline-card` (registered automatically): timeline of all cameras for 24 h / 3 days / 7 days, click to play clips or recordings, one-click **timelapse**
+- Action `alcedo_nvr.create_timelapse` (returns the file path, e.g. for pCloud Sync)
+- Signed media proxy for clips, recordings, snapshots and timelapses (whitelisted paths only)
+
 ## [0.1.0] - 2026-11-25
 
 ### Added

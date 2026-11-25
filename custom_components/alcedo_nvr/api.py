@@ -66,6 +66,30 @@ class AlcedoClient:
         """Start (or extend) an event, e.g. from a Ring motion sensor."""
         await self._request("POST", f"/hook/{camera}", params={"label": label})
 
+    async def timeline(self, start: float, end: float) -> dict[str, Any]:
+        return await self._request("GET", "/timeline", params={"start": start, "end": end})
+
+    async def timelapse(self, body: dict[str, Any]) -> dict[str, Any]:
+        return await self._request("POST", "/timelapse", json=body)
+
+    async def timelapse_status(self, job: str) -> dict[str, Any]:
+        return await self._request("GET", f"/timelapse/{job}")
+
+    async def open_path(
+        self, path: str, params: dict[str, Any] | None = None
+    ) -> aiohttp.ClientResponse:
+        """Open any media path of the app API (caller must release the response)."""
+        resp = await self._session.get(
+            f"{self.base}/{path}",
+            params=params,
+            headers=self._headers,
+            timeout=aiohttp.ClientTimeout(total=None, sock_connect=10, sock_read=300),
+        )
+        if resp.status != 200:
+            resp.release()
+            raise AlcedoError(f"HTTP {resp.status}")
+        return resp
+
     async def open_file(self, event_id: str, kind: str) -> aiohttp.ClientResponse:
         """Open a snapshot / clip download (caller must release the response)."""
         name = "clip.mp4" if kind == "clip" else "snapshot.jpg"

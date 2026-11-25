@@ -19,3 +19,38 @@ trigger:
             - vehicle
             - animal
             - doorbell
+
+create_timelapse:
+  fields:
+    hours:
+      default: 24
+      selector:
+        number:
+          min: 1
+          max: 744
+          unit_of_measurement: h
+          mode: box
+    mode:
+      default: clips
+      selector:
+        select:
+          options:
+            - clips
+            - snapshots
+    speed:
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 16
+          mode: slider
+    only_confirmed:
+      default: true
+      selector:
+        boolean:
+    entity_id:
+      selector:
+        entity:
+          integration: alcedo_nvr
+          domain: camera
+          multiple: true

@@ -51,22 +51,46 @@
   },
   "entity": {
     "binary_sensor": {
-      "alarm": { "name": "Alarm" },
-      "activity": { "name": "Aktivität" },
-      "recording": { "name": "Aufnahme" },
-      "push_connection": { "name": "Push-Verbindung" }
+      "alarm": {
+        "name": "Alarm"
+      },
+      "activity": {
+        "name": "Aktivität"
+      },
+      "recording": {
+        "name": "Aufnahme"
+      },
+      "push_connection": {
+        "name": "Push-Verbindung"
+      }
     },
     "sensor": {
-      "last_event": { "name": "Letztes Ereignis" },
-      "last_event_time": { "name": "Zeit letztes Ereignis" },
-      "events_today": { "name": "Ereignisse heute" },
-      "alarms_today": { "name": "Alarme heute" },
-      "storage_used": { "name": "Speicher belegt" },
-      "ai_status": { "name": "KI-Status" },
-      "pcloud_uploads": { "name": "pCloud-Uploads" }
+      "last_event": {
+        "name": "Letztes Ereignis"
+      },
+      "last_event_time": {
+        "name": "Zeit letztes Ereignis"
+      },
+      "events_today": {
+        "name": "Ereignisse heute"
+      },
+      "alarms_today": {
+        "name": "Alarme heute"
+      },
+      "storage_used": {
+        "name": "Speicher belegt"
+      },
+      "ai_status": {
+        "name": "KI-Status"
+      },
+      "pcloud_uploads": {
+        "name": "pCloud-Uploads"
+      }
     },
     "switch": {
-      "detection": { "name": "Erkennung" }
+      "detection": {
+        "name": "Erkennung"
+      }
     }
   },
   "services": {
@@ -74,8 +98,40 @@
       "name": "Alarm auslösen",
       "description": "Startet (oder verlängert) ein Ereignis auf Alcedo-Kameras, z. B. durch einen Ring-Bewegungs- oder Klingelsensor. Kameras mit Aufnahme „on_demand“ beginnen jetzt aufzunehmen.",
       "fields": {
-        "entity_id": { "name": "Kameras", "description": "Kamera-Entitäten von Alcedo NVR." },
-        "label": { "name": "Bezeichnung", "description": "Grund, z. B. motion, person oder doorbell." }
+        "entity_id": {
+          "name": "Kameras",
+          "description": "Kamera-Entitäten von Alcedo NVR."
+        },
+        "label": {
+          "name": "Bezeichnung",
+          "description": "Grund, z. B. motion, person oder doorbell."
+        }
+      }
+    },
+    "create_timelapse": {
+      "name": "Zeitraffer erstellen",
+      "description": "Erstellt ein Zeitraffer-Video aller Ereignisse im Zeitraum (Clips beschleunigt, Bildunterschrift mit Kamera, Uhrzeit und KI-Beschreibung). Liefert den Dateipfad, z. B. zum Hochladen mit pCloud Sync.",
+      "fields": {
+        "hours": {
+          "name": "Zeitraum (Stunden)",
+          "description": "24 = letzter Tag, 168 = letzte Woche"
+        },
+        "mode": {
+          "name": "Quelle",
+          "description": "clips (Videos) oder snapshots (Standbilder, schneller)"
+        },
+        "speed": {
+          "name": "Geschwindigkeit",
+          "description": "Beschleunigung der Clips"
+        },
+        "only_confirmed": {
+          "name": "Nur bestätigte Alarme",
+          "description": "Von der KI verworfene Ereignisse auslassen"
+        },
+        "entity_id": {
+          "name": "Kameras",
+          "description": "Optional, Standard: alle"
+        }
       }
     }
   }

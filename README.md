@@ -26,7 +26,14 @@
 - Event **`alcedo_nvr_event`** (`type`: start / update / verdict / end)
 - Action **`alcedo_nvr.trigger`** – start an event from any sensor (e.g. Ring motion / doorbell); `on_demand` cameras start recording
 - **pCloud**: finished events are uploaded automatically via [pCloud Sync](https://github.com/DASO203/pcloud-sync-unofficial) (off / confirmed alarms / all)
-- **Timeline of all cameras** in the Alcedo web UI (sidebar → *Alcedo NVR* → *Timeline*)
+- **Dashboard card `custom:alcedo-timeline-card`** (registered automatically): timeline of all cameras (24 h / 3 d / 7 d), click to play, **Timelapse** button
+- Action **`alcedo_nvr.create_timelapse`** - returns the file path (e.g. upload a weekly timelapse with pCloud Sync)
+
+```yaml
+type: custom:alcedo-timeline-card
+hours: 24
+periods: [24, 72, 168]
+```
 
 ## Install
 

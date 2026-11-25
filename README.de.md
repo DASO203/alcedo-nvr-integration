@@ -32,7 +32,8 @@ Dazu kommen:
 - **Event `alcedo_nvr_event`** (`type`: start / update / verdict / end) mit Kamera, Objekten, KI-Beschreibung und Dateipfaden
 - **Aktion `alcedo_nvr.trigger`:** Ein beliebiger Sensor (z. B. Ring-Bewegung oder -Klingel) löst ein Ereignis aus. Kameras mit Aufnahme `on_demand` beginnen dann aufzunehmen.
 - **pCloud:** Abgeschlossene Ereignisse werden über [pCloud Sync](https://github.com/DASO203/pcloud-sync-unofficial) automatisch hochgeladen.
-- **Zeitverlauf aller Kameras:** in der Alcedo-Oberfläche (Seitenleiste → *Alcedo NVR* → *Zeitverlauf*)
+- **Dashboard-Karte `custom:alcedo-timeline-card`:** Zeitstrahl aller Kameras (24 h / 3 T / 7 T), Klick zum Abspielen, **Zeitraffer** aller Alarme
+- **Aktion `alcedo_nvr.create_timelapse`:** Zeitraffer erstellen und den Dateipfad zurückgeben, z. B. für pCloud Sync
 
 ## Installation
 
@@ -40,6 +41,24 @@ Dazu kommen:
 2. Diese Integration installieren: Button oben, oder **Einstellungen → Marketplace → Aus Link hinzufügen** → `DASO203/alcedo-nvr-integration`
 3. Home Assistant meldet **„Neues Gerät gefunden: Alcedo NVR“** → **Hinzufügen**
    (Manuell: *Integration hinzufügen → Alcedo NVR*, dann Host und API-Key aus der Alcedo-Oberfläche → „Verbindung für die Integration“ eintragen)
+
+## Dashboard-Karte
+
+Die Karte wird automatisch registriert. Im Dashboard **Karte hinzufügen → Alcedo NVR Timeline** wählen oder per YAML:
+
+```yaml
+type: custom:alcedo-timeline-card
+title: Kameras
+hours: 24                     # Startzeitraum
+periods: [24, 72, 168]        # Knöpfe
+cameras: [einfahrt, garten]   # optional, Standard: alle
+show_rejected: true           # verworfene Ereignisse grau anzeigen
+timelapse_mode: clips         # clips | snapshots (schneller)
+timelapse_speed: 4            # 1-16
+only_confirmed: true          # Zeitraffer nur aus bestätigten Alarmen
+```
+
+Der Zeitraffer wird in der App mit niedriger Priorität erstellt. Bereits berechnete Teile werden wiederverwendet, ein Wochen-Zeitraffer nach einem Tages-Zeitraffer geht deshalb schnell.
 
 ## pCloud einrichten
 
